@@ -1,0 +1,13 @@
+{
+  "name": "amara-v3-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "mobile": "yarn workspace @amara/mobile",
+    "backend": "yarn workspace @amara/backend"
+  }
+}

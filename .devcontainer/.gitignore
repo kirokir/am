@@ -1,0 +1,26 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Expo build artifacts
+.expo/
+dist/
+build/
+web-build/
+
+# Backend build artifacts
+services/backend/dist/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,29 @@
+{
+  "name": "Amara V3 Development",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+  "forwardPorts": [
+    8081,
+    3001
+  ],
+  "portsAttributes": {
+    "8081": {
+      "label": "Expo Metro"
+    },
+    "3001": {
+      "label": "Backend API"
+    }
+  },
+  "postCreateCommand": "npm install -g yarn && yarn install && yarn global add eas-cli expo-cli",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "humao.rest-client",
+        "formulahendry.auto-rename-tag",
+        "Prisma.prisma"
+      ]
+    }
+  }
+}
