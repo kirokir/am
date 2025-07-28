@@ -8,14 +8,10 @@ type AuthContextType = {
   loading: boolean;
   hasOnboarded: boolean;
   checkOnboardingStatus: () => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType>({
-  session: null,
-  loading: true,
-  hasOnboarded: false,
-  checkOnboardingStatus: async () => {},
-});
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -27,73 +23,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [hasOnboarded, setHasOnboarded] = useState(false);
 
   useEffect(() => {
-    // Listen for Firebase auth state changes
-    const unsubscribe = auth().onIdTokenChanged(async (user) => {
-      if (user) {
-        const idToken = await user.getIdToken();
-        // Call Supabase Edge Function to get a Supabase JWT
-        const { data, error } = await supabase.functions.invoke('get-supabase-jwt', {
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken }),
-        });
-
-        if (error) {
-          console.error('Error getting Supabase JWT:', error);
-          setLoading(false);
-          return;
-        }
-
-        // Set the Supabase session with the new token
-        const { error: sessionError } = await supabase.auth.setSession({
-            access_token: data.accessToken,
-            refresh_token: data.refreshToken, // This will be faked, Supabase handles it
-        });
-        
-        if (sessionError) {
-          console.error("Error setting Supabase session:", sessionError);
-        }
-
-      } else {
-        // If Firebase user is null, sign out from Supabase as well
-        await supabase.auth.signOut();
-      }
-    });
-
-    // Listen for Supabase auth state changes
-    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription: authStateSubscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setSession(session);
-        setLoading(false);
+        if (session?.user?.id !== getSession()?.user?.id) {
+            setSession(session);
+        }
         if (session) {
             await checkOnboardingStatus(session.user.id);
         }
+        setLoading(false);
       }
     );
 
+    const idTokenListener = auth().onIdTokenChanged(async (user) => {
+      if (user) {
+        setLoading(true);
+        const idToken = await user.getIdToken();
+        const { data, error } = await supabase.functions.invoke('get-supabase-jwt', {
+          body: { idToken },
+        });
+
+        if (error) {
+          console.error("Error exchanging Firebase token for Supabase session:", error);
+          await auth().signOut();
+        } else {
+          setSession(data);
+          if (data.user) {
+              await checkOnboardingStatus(data.user.id);
+          }
+        }
+        setLoading(false);
+      }
+    });
+
+    const getSession = () => session;
+
     return () => {
-      unsubscribe();
-      authSubscription.unsubscribe();
+      authStateSubscription.unsubscribe();
+      idTokenListener();
     };
   }, []);
 
   const checkOnboardingStatus = async (userId: string) => {
-    // A user is considered "onboarded" if they are part of a 'COUPLE' chat.
-    const { data, error } = await supabase
-      .from('chat_participants')
-      .select('chats(chat_type)')
-      .eq('user_id', userId);
-
+    const { data, error } = await supabase.rpc('get_couple_chat_details');
     if (error) {
-      console.error('Error checking onboarding status:', error);
+      console.log('Onboarding check error (this is normal for new users):', error.message);
       setHasOnboarded(false);
       return;
     }
-
-    const isOnboarded = data.some((p: any) => p.chats.chat_type === 'COUPLE');
-    setHasOnboarded(isOnboarded);
+    setHasOnboarded(!!data && data.length > 0);
   };
-  
-  const value = { session, loading, hasOnboarded, checkOnboardingStatus: () => checkOnboardingStatus(session!.user.id) };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    await auth().signOut();
+    setSession(null);
+    setHasOnboarded(false);
+  };
+
+  const value = { session, loading, hasOnboarded, checkOnboardingStatus: () => checkOnboardingStatus(session!.user.id), signOut };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

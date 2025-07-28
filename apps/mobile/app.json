@@ -1,11 +1,12 @@
 {
   "expo": {
     "name": "Amara",
-    "slug": "amara-v3",
+    "slug": "amara",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "amara",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -13,14 +14,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.amara.v3"
+      "bundleIdentifier": "com.amara",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0E1C36"
       },
-      "package": "com.amara.v3",
+      "package": "com.amara",
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -30,14 +32,21 @@
       "expo-router",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      "expo-build-properties"
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID_HERE"
+        "projectId": "93b88633-cc8e-4d0b-ae28-1c2575f3bb66"
       }
     }
   }

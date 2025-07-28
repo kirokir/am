@@ -1,10 +1,11 @@
 import React from 'react';
-import { Slot, SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '../lib/auth';
 import { View, ActivityIndicator } from 'react-native';
 import { Colors } from '../lib/ColorTheme';
+import { StatusBar } from 'expo-status-bar';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,15 +16,15 @@ function InitialLayout() {
 
     useEffect(() => {
         if (loading) return;
-        
-        const inAuthGroup = segments[0] === '(auth)';
-        const inOnboardingGroup = segments[0] === '(onboarding)';
 
-        if (session && !hasOnboarded && !inOnboardingGroup) {
-            router.replace('/(onboarding)/partner-select');
-        } else if (session && hasOnboarded && (inAuthGroup || inOnboardingGroup)) {
+        const inApp = segments[0] === '(tabs)';
+        const inOnboarding = segments[0] === '(onboarding)';
+        
+        if (session && !hasOnboarded && !inOnboarding) {
+            router.replace('/(onboarding)');
+        } else if (session && hasOnboarded && !inApp) {
             router.replace('/(tabs)/couple');
-        } else if (!session && !inAuthGroup) {
+        } else if (!session) {
             router.replace('/(auth)/login');
         }
 
@@ -31,11 +32,15 @@ function InitialLayout() {
     }, [session, loading, hasOnboarded, segments]);
 
     if (loading) {
-        return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.indigo }}><ActivityIndicator size="large" color={Colors.white} /></View>;
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.indigo }}>
+                <ActivityIndicator size="large" color={Colors.white} />
+            </View>
+        );
     }
     
     return (
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(onboarding)" />
             <Stack.Screen name="(tabs)" />
@@ -48,14 +53,14 @@ export default function RootLayout() {
     'Inter-Regular': require('../assets/fonts/Inter-Regular.ttf'),
     'Inter-SemiBold': require('../assets/fonts/Inter-SemiBold.ttf'),
     'Inter-Bold': require('../assets/fonts/Inter-Bold.ttf'),
-    'SF-Rounded-Bold': require('../assets/fonts/SF-Pro-Rounded-Bold.ttf'),
+    'SF-Pro-Rounded-Bold': require('../assets/fonts/SF-Pro-Rounded-Bold.ttf'),
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+    if (fontError) {
+      console.error("Font loading error:", fontError);
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -63,6 +68,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      <StatusBar style="light" />
       <InitialLayout />
     </AuthProvider>
   );

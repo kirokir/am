@@ -1,8 +1,9 @@
 export const Colors = {
   indigo: '#0E1C36',
-  violet: '#7D5EFF',
+  violet: '#5D3FD3', 
   cerulean: '#00A9E0',
   white: '#FFFFFF',
+  black: '#000000',
   offGray: '#F5F7FA',
   darkText: '#0E1C36',
   lightText: '#FFFFFF',
