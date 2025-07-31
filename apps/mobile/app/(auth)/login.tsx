@@ -1,90 +1,113 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import auth from '@react-native-firebase/auth';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { Colors } from '../../lib/ColorTheme';
-import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+// IMPORTANT: Replace this with the Web Client ID from your google-services.json file
+// It's usually found under "client" -> "oauth_client" -> "client_id" where "client_type": 3
+const WEB_CLIENT_ID = 'YOUR_WEB_CLIENT_ID_FROM_GOOGLE-SERVICES.JSON'; 
 
 export default function LoginScreen() {
-    const router = useRouter();
-    const [phone, setPhone] = useState('');
-    const [code, setCode] = useState('');
-    const [confirm, setConfirm] = useState<any>(null);
     const [loading, setLoading] = useState(false);
 
-    const signInWithPhoneNumber = async () => {
-        if (!/^\+[1-9]\d{1,14}$/.test(phone)) {
-            Alert.alert("Invalid Phone Number", "Please enter in E.164 format (e.g., +14155552671).");
-            return;
-        }
-        setLoading(true);
-        try {
-            const confirmation = await auth().signInWithPhoneNumber(phone);
-            setConfirm(confirmation);
-        } catch (error: any) {
-            Alert.alert("Error", error.message);
-        }
-        setLoading(false);
-    };
+    useEffect(() => {
+        // Configure Google Sign-In. This only needs to be done once.
+        GoogleSignin.configure({
+            webClientId: WEB_CLIENT_ID,
+            offlineAccess: true, // Required for getting an idToken on Android
+        });
+    }, []);
 
-    const confirmCode = async () => {
+    const onGoogleButtonPress = async () => {
         setLoading(true);
         try {
-            await confirm.confirm(code);
-            // On success, the onIdTokenChanged listener in auth.tsx will handle the rest.
+            // Check if the device has Google Play services installed and up to date
+            await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+            
+            // Get the user's account details
+            const { user } = await GoogleSignin.signIn();
+            
+            // Critical check: Ensure the idToken was returned
+            if (!user.idToken) {
+                throw new Error("Google Sign-In failed to provide an ID token.");
+            }
+
+            // Create a Firebase credential with the Google ID token
+            const googleCredential = auth.GoogleAuthProvider.credential(user.idToken);
+
+            // Sign-in the user with the credential
+            await auth().signInWithCredential(googleCredential);
+            // On a successful sign-in, the onIdTokenChanged listener in `lib/auth.tsx`
+            // will automatically handle exchanging the token with Supabase and navigating the user.
+
         } catch (error: any) {
-            Alert.alert('Invalid Code', error.message);
+            // Handle specific sign-in errors
+            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+                console.log("User cancelled the login flow");
+            } else if (error.code === statusCodes.IN_PROGRESS) {
+                console.log("Sign in is in progress already");
+            } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+                Alert.alert("Error", "Google Play Services are not available or are out of date on this device.");
+            } else {
+                // Handle any other errors
+                console.error("Google Sign-In Error", error);
+                Alert.alert("Authentication Error", "An unexpected error occurred. Please try again.");
+            }
+        } finally {
+            // Ensure the loading indicator is turned off
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAwareScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.content}>
                 <Text style={styles.title}>Amara</Text>
                 <Text style={styles.subtitle}>Your relationship wellness space.</Text>
 
-                {!confirm ? (
-                    <>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Phone Number (e.g., +1...)"
-                            placeholderTextColor={Colors.secondaryText}
-                            keyboardType="phone-pad"
-                            onChangeText={setPhone}
-                            value={phone}
-                        />
-                        <TouchableOpacity style={styles.button} onPress={signInWithPhoneNumber} disabled={loading}>
-                            {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>Send Code</Text>}
-                        </TouchableOpacity>
-                    </>
-                ) : (
-                    <>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Verification Code"
-                            placeholderTextColor={Colors.secondaryText}
-                            keyboardType="number-pad"
-                            onChangeText={setCode}
-                            value={code}
-                        />
-                        <TouchableOpacity style={styles.button} onPress={confirmCode} disabled={loading}>
-                             {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>Verify & Sign In</Text>}
-                        </TouchableOpacity>
-                    </>
-                )}
-            </KeyboardAwareScrollView>
+                <TouchableOpacity style={styles.button} onPress={onGoogleButtonPress} disabled={loading}>
+                    {loading ? (
+                        <ActivityIndicator color={Colors.darkText} />
+                    ) : (
+                        <>
+                            <MaterialCommunityIcons name="google" size={24} color={Colors.darkText} />
+                            <Text style={styles.buttonText}>Sign in with Google</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: Colors.indigo },
-    scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-    title: { fontSize: 48, fontFamily: 'SF-Rounded-Bold', color: Colors.white, textAlign: 'center' },
-    subtitle: { fontSize: 18, fontFamily: 'Inter-Regular', color: Colors.secondaryText, textAlign: 'center', marginBottom: 40 },
-    input: { height: 50, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, paddingHorizontal: 16, color: Colors.white, fontSize: 16, fontFamily: 'Inter-SemiBold', marginBottom: 20 },
-    button: { height: 50, backgroundColor: Colors.violet, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-    buttonText: { color: Colors.white, fontSize: 16, fontFamily: 'Inter-Bold' },
+    content: { flex: 1, justifyContent: 'center', padding: 24 },
+    title: { fontSize: 48, fontFamily: 'SF-Pro-Rounded-Bold', color: Colors.white, textAlign: 'center' },
+    subtitle: { fontSize: 18, fontFamily: 'Inter-Regular', color: Colors.secondaryText, textAlign: 'center', marginBottom: 60 },
+    button: {
+        height: 55,
+        backgroundColor: Colors.white,
+        borderRadius: 12,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    buttonText: {
+        color: Colors.darkText,
+        fontSize: 16,
+        fontFamily: 'Inter-Bold',
+        marginLeft: 12,
+    },
 });

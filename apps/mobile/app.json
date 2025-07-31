@@ -4,24 +4,17 @@
     "slug": "amara",
     "version": "1.0.0",
     "orientation": "portrait",
-    // "icon": "./assets/icon.png", // Temporarily commented out to allow build to pass
     "userInterfaceStyle": "light",
     "scheme": "amara-v3",
     "splash": {
-      // "image": "./assets/splash.png", // Temporarily commented out
       "resizeMode": "contain",
       "backgroundColor": "#0E1C36"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.amara",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "bundleIdentifier": "com.amara"
     },
     "android": {
-      // "adaptiveIcon": { // Temporarily commented out
-      //   "foregroundImage": "./assets/adaptive-icon.png",
-      //   "backgroundColor": "#0E1C36"
-      // },
       "package": "com.amara",
       "googleServicesFile": "./google-services.json"
     },

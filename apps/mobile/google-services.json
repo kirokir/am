@@ -12,7 +12,20 @@
           "package_name": "com.amara"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "450043617046-o2lp9q2j3noufbakpi302voeuvglf5d3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.amara",
+            "certificate_hash": "baf6d003d8ece41fe230e0029aef52d93834371a"
+          }
+        },
+        {
+          "client_id": "450043617046-sduc50ng3g3tbdtqjcit159plarr1ago.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD69RjtOFjAQ5FthSRMPcddI6WTp6xtZsU"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "450043617046-sduc50ng3g3tbdtqjcit159plarr1ago.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -9,5 +9,8 @@
   "scripts": {
     "mobile": "yarn workspace @amara/mobile",
     "backend": "yarn workspace @amara/backend"
+  },
+  "devDependencies": {
+    "supabase": "^2.33.7"
   }
 }
