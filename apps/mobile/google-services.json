@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "450043617046",
+    "project_id": "amara-6f199",
+    "storage_bucket": "amara-6f199.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450043617046:android:09ac1e3b716078a6737a37",
+        "android_client_info": {
+          "package_name": "com.amara"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD69RjtOFjAQ5FthSRMPcddI6WTp6xtZsU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
